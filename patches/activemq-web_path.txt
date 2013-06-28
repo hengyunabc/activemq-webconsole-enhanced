@@ -1,0 +1,454 @@
+### Eclipse Workspace Patch 1.0
+#P activemq-web
+Index: src/main/java/org/apache/activemq/web/TopicConsumerQuery.java
+===================================================================
+--- src/main/java/org/apache/activemq/web/TopicConsumerQuery.java	(revision 0)
++++ src/main/java/org/apache/activemq/web/TopicConsumerQuery.java	(working copy)
+@@ -0,0 +1,45 @@
++/*
++ * Licensed to the Apache Software Foundation (ASF) under one or more
++ * contributor license agreements.  See the NOTICE file distributed with
++ * this work for additional information regarding copyright ownership.
++ * The ASF licenses this file to You under the Apache License, Version 2.0
++ * (the "License"); you may not use this file except in compliance with
++ * the License.  You may obtain a copy of the License at
++ *
++ * http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++package org.apache.activemq.web;
++
++import java.util.Collection;
++
++import javax.jms.JMSException;
++
++import org.apache.activemq.broker.jmx.SubscriptionViewMBean;
++
++/**
++ * Query for Topic consumers.
++ * 
++ * 
++ */
++public class TopicConsumerQuery extends DestinationFacade {
++
++	public TopicConsumerQuery(BrokerFacade brokerFacade) throws JMSException {
++		super(brokerFacade);
++		setJMSDestinationType("topic");
++	}
++
++	public Collection<SubscriptionViewMBean> getConsumers() throws Exception {
++		return getBrokerFacade().getTopicConsumers(getJMSDestination());
++	}
++
++	public void destroy() {
++		// empty
++	}
++
++}
+\ No newline at end of file
+Index: src/main/java/org/apache/activemq/web/TopicConsumerQuery.java
+===================================================================
+--- src/main/java/org/apache/activemq/web/TopicConsumerQuery.java	(revision 0)
++++ src/main/java/org/apache/activemq/web/TopicConsumerQuery.java	(working copy)
+
+Property changes on: src/main/java/org/apache/activemq/web/TopicConsumerQuery.java
+___________________________________________________________________
+Added: svn:executable
+## -0,0 +1 ##
++*
+\ No newline at end of property
+Index: src/main/java/org/apache/activemq/web/QueueProducerQuery.java
+===================================================================
+--- src/main/java/org/apache/activemq/web/QueueProducerQuery.java	(revision 0)
++++ src/main/java/org/apache/activemq/web/QueueProducerQuery.java	(working copy)
+@@ -0,0 +1,45 @@
++/*
++ * Licensed to the Apache Software Foundation (ASF) under one or more
++ * contributor license agreements.  See the NOTICE file distributed with
++ * this work for additional information regarding copyright ownership.
++ * The ASF licenses this file to You under the Apache License, Version 2.0
++ * (the "License"); you may not use this file except in compliance with
++ * the License.  You may obtain a copy of the License at
++ *
++ * http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++package org.apache.activemq.web;
++
++import java.util.Collection;
++
++import javax.jms.JMSException;
++
++import org.apache.activemq.broker.jmx.ProducerViewMBean;
++
++/**
++ * Query for Queue producers.
++ * 
++ * 
++ */
++public class QueueProducerQuery extends DestinationFacade {
++
++	public QueueProducerQuery(BrokerFacade brokerFacade) throws JMSException {
++		super(brokerFacade);
++		setJMSDestinationType("queue");
++	}
++
++	public Collection<ProducerViewMBean> getProducers() throws Exception {
++		return getBrokerFacade().getQueueProducers(getJMSDestination());
++	}
++
++	public void destroy() {
++		// empty
++	}
++
++}
+\ No newline at end of file
+Index: src/main/java/org/apache/activemq/web/QueueProducerQuery.java
+===================================================================
+--- src/main/java/org/apache/activemq/web/QueueProducerQuery.java	(revision 0)
++++ src/main/java/org/apache/activemq/web/QueueProducerQuery.java	(working copy)
+
+Property changes on: src/main/java/org/apache/activemq/web/QueueProducerQuery.java
+___________________________________________________________________
+Added: svn:executable
+## -0,0 +1 ##
++*
+\ No newline at end of property
+Index: src/main/java/org/apache/activemq/web/BrokerFacade.java
+===================================================================
+--- src/main/java/org/apache/activemq/web/BrokerFacade.java	(revision 1457257)
++++ src/main/java/org/apache/activemq/web/BrokerFacade.java	(working copy)
+@@ -73,6 +73,39 @@
+ 			throws Exception;
+ 
+ 	/**
++	 * All active producers of a queue.
++	 * 
++	 * @param queueName
++	 *            the name of the queue, not <code>null</code>
++	 * @return not <code>null</code>
++	 * @throws Exception
++	 */
++	Collection<ProducerViewMBean> getQueueProducers(String queueName)
++			throws Exception;
++
++	/**
++	 * All active consumers of a topic.
++	 * 
++	 * @param topicName
++	 *            the name of the topic, not <code>null</code>
++	 * @return not <code>null</code>
++	 * @throws Exception
++	 */
++	Collection<SubscriptionViewMBean> getTopicConsumers(String topicName)
++			throws Exception;
++
++	/**
++	 * All active producers of a topic.
++	 * 
++	 * @param topicName
++	 *            the name of the topic, not <code>null</code>
++	 * @return not <code>null</code>
++	 * @throws Exception
++	 */
++	Collection<ProducerViewMBean> getTopicProducers(String topicName)
++			throws Exception;
++	
++	/**
+ 	 * Active durable subscribers to topics of the broker.
+ 	 * 
+ 	 * @return not <code>null</code>
+@@ -100,6 +133,13 @@
+ 	Collection<String> getConnectors() throws Exception;
+ 
+ 	/**
++	 * The ConnectorViewMBeans of all transport connectors of the broker (f.e. openwire, ssl)
++	 * @return not <code>null</code>
++	 * @throws Exception
++	 */
++    Collection<ConnectorViewMBean> getConnectorViewMBeans() throws Exception;
++    	
++	/**
+ 	 * A transport connectors.
+ 	 * 
+ 	 * @param name
+@@ -149,6 +189,17 @@
+ 	Collection<SubscriptionViewMBean> getConsumersOnConnection(
+ 			String connectionName) throws Exception;
+ 	/**
++	 * Returns all producers of a connection.
++	 * 
++	 * @param connectionName
++	 *            the name of the connection, not <code>null</code>
++	 * @return not <code>null</code>
++	 * @throws Exception
++	 */	
++	Collection<ProducerViewMBean> getProducersOnConnection(
++			String connectionID) throws Exception;
++	
++	/**
+ 	 * The brokers network connectors.
+ 	 * 
+ 	 * @return not <code>null</code>
+@@ -208,5 +259,4 @@
+     Collection<JobFacade> getScheduledJobs() throws Exception;
+ 
+     boolean isJobSchedulerStarted();
+-
+ }
+\ No newline at end of file
+Index: src/main/java/org/apache/activemq/web/TopicProducerQuery.java
+===================================================================
+--- src/main/java/org/apache/activemq/web/TopicProducerQuery.java	(revision 0)
++++ src/main/java/org/apache/activemq/web/TopicProducerQuery.java	(working copy)
+@@ -0,0 +1,45 @@
++/*
++ * Licensed to the Apache Software Foundation (ASF) under one or more
++ * contributor license agreements.  See the NOTICE file distributed with
++ * this work for additional information regarding copyright ownership.
++ * The ASF licenses this file to You under the Apache License, Version 2.0
++ * (the "License"); you may not use this file except in compliance with
++ * the License.  You may obtain a copy of the License at
++ *
++ * http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++package org.apache.activemq.web;
++
++import java.util.Collection;
++
++import javax.jms.JMSException;
++
++import org.apache.activemq.broker.jmx.ProducerViewMBean;
++
++/**
++ * Query for Queue producers.
++ * 
++ * 
++ */
++public class TopicProducerQuery extends DestinationFacade {
++
++	public TopicProducerQuery(BrokerFacade brokerFacade) throws JMSException {
++		super(brokerFacade);
++		setJMSDestinationType("topic");
++	}
++
++	public Collection<ProducerViewMBean> getProducers() throws Exception {
++		return getBrokerFacade().getTopicProducers(getJMSDestination());
++	}
++
++	public void destroy() {
++		// empty
++	}
++
++}
+\ No newline at end of file
+Index: src/main/java/org/apache/activemq/web/TopicProducerQuery.java
+===================================================================
+--- src/main/java/org/apache/activemq/web/TopicProducerQuery.java	(revision 0)
++++ src/main/java/org/apache/activemq/web/TopicProducerQuery.java	(working copy)
+
+Property changes on: src/main/java/org/apache/activemq/web/TopicProducerQuery.java
+___________________________________________________________________
+Added: svn:executable
+## -0,0 +1 ##
++*
+\ No newline at end of property
+Index: activemq-web-test.jar
+===================================================================
+Cannot display: file marked as a binary type.
+svn:mime-type = application/octet-stream
+Index: activemq-web-test.jar
+===================================================================
+--- activemq-web-test.jar	(revision 0)
++++ activemq-web-test.jar	(working copy)
+
+Property changes on: activemq-web-test.jar
+___________________________________________________________________
+Added: svn:executable
+## -0,0 +1 ##
++*
+\ No newline at end of property
+Added: svn:mime-type
+## -0,0 +1 ##
++application/octet-stream
+\ No newline at end of property
+Index: src/main/java/org/apache/activemq/web/ConnectionQuery.java
+===================================================================
+--- src/main/java/org/apache/activemq/web/ConnectionQuery.java	(revision 1457257)
++++ src/main/java/org/apache/activemq/web/ConnectionQuery.java	(working copy)
+@@ -20,6 +20,7 @@
+ import java.util.Collections;
+ 
+ import org.apache.activemq.broker.jmx.ConnectionViewMBean;
++import org.apache.activemq.broker.jmx.ProducerViewMBean;
+ import org.apache.activemq.broker.jmx.SubscriptionViewMBean;
+ 
+ /**
+@@ -61,5 +62,12 @@
+ 			return Collections.emptyList();
+ 		return mBrokerFacade.getConsumersOnConnection(connectionID);
+ 	}
++	
++	public Collection<ProducerViewMBean> getProducers() throws Exception {
++		String connectionID = getConnectionID();
++		if (connectionID == null)
++			return Collections.emptyList();
++		return mBrokerFacade.getProducersOnConnection(connectionID);
++	}
+ 
+ }
+\ No newline at end of file
+Index: src/main/java/org/apache/activemq/web/BrokerFacadeSupport.java
+===================================================================
+--- src/main/java/org/apache/activemq/web/BrokerFacadeSupport.java	(revision 1457257)
++++ src/main/java/org/apache/activemq/web/BrokerFacadeSupport.java	(working copy)
+@@ -120,8 +120,9 @@
+     @SuppressWarnings("unchecked")
+     public Collection<String> getConnections(String connectorName) throws Exception {
+         String brokerName = getBrokerName();
+-        ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName
+-                + ",connector=clientConnectors,connectorName=" + connectorName + ",connectionName=*");
++
++      ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName 
++    		  + ",connector=clientConnectors,connectorName=" + connectorName + ",connectionViewType=clientId" + ",connectionName=*");   
+         Set<ObjectName> queryResult = queryNames(query, null);
+         Collection<String> result = new ArrayList<String>(queryResult.size());
+         for (ObjectName on : queryResult) {
+@@ -136,7 +137,7 @@
+         connectionName = StringUtils.replace(connectionName, ":", "_");
+         String brokerName = getBrokerName();
+         ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName
+-                + ",connector=clientConnectors,*,connectionName=" + connectionName);
++                + ",connector=clientConnectors,*,connectionViewType=clientId,connectionName=" + connectionName);
+         Set<ObjectName> queryResult = queryNames(query, null);
+         if (queryResult.size() == 0)
+             return null;
+@@ -155,7 +156,15 @@
+             result.add(on.getKeyProperty("connectorName"));
+         return result;
+     }
+-
++    
++    @SuppressWarnings("unchecked")
++    public Collection<ConnectorViewMBean> getConnectorViewMBeans() throws Exception {
++        String brokerName = getBrokerName();
++        ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName + ",connector=clientConnectors,connectorName=*");
++        Set<ObjectName> queryResult = queryNames(query, null);
++        return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]), ConnectorViewMBean.class);
++    }
++    
+     public ConnectorViewMBean getConnector(String name) throws Exception {
+         String brokerName = getBrokerName();
+         ObjectName objectName = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName
+@@ -187,18 +196,93 @@
+         ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName
+                 + ",destinationType=Queue,destinationName=" + queueName + ",endpoint=Consumer,*");
+         Set<ObjectName> queryResult = queryNames(query, null);
++        
+         return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]), SubscriptionViewMBean.class);
+     }
++    
++    @SuppressWarnings("unchecked")
++    public Collection<ProducerViewMBean> getQueueProducers(String queueName) throws Exception {
++        String brokerName = getBrokerName();
++        queueName = StringUtils.replace(queueName, "\"", "_");
++        ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName
++                + ",destinationType=Queue,destinationName=" + queueName + ",endpoint=Producer,*");
++        Set<ObjectName> queryResult = queryNames(query, null);
++        
++        return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]), ProducerViewMBean.class);
++    }
+ 
+     @SuppressWarnings("unchecked")
++	public Collection<SubscriptionViewMBean> getTopicConsumers(String topicName) throws Exception{
++        String brokerName = getBrokerName();
++        topicName = StringUtils.replace(topicName, "\"", "_");
++        ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName
++                + ",destinationType=Topic,destinationName=" + topicName + ",endpoint=Consumer,*");
++        Set<ObjectName> queryResult = queryNames(query, null);
++        
++        return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]), SubscriptionViewMBean.class);
++	}
++
++    @SuppressWarnings("unchecked")
++	public Collection<ProducerViewMBean> getTopicProducers(String topicName) throws Exception{
++        String brokerName = getBrokerName();
++        topicName = StringUtils.replace(topicName, "\"", "_");
++        ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName
++                + ",destinationType=Topic,destinationName=" + topicName + ",endpoint=Producer,*");
++        Set<ObjectName> queryResult = queryNames(query, null);
++        
++        return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]), ProducerViewMBean.class);
++	}
++	
++    @SuppressWarnings("unchecked")
+     public Collection<SubscriptionViewMBean> getConsumersOnConnection(String connectionName) throws Exception {
+         connectionName = StringUtils.replace(connectionName, ":", "_");
+         String brokerName = getBrokerName();
+         ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName
+-                + ",*,endpoint=Consumer,clientId=" + connectionName);
++                + ",*,connectionViewType=clientId,connectionName=" + connectionName);
++        
+         Set<ObjectName> queryResult = queryNames(query, null);
+-        return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]), SubscriptionViewMBean.class);
++        
++        Collection<ConnectionViewMBean> connectionViewMBeans = getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]),
++        		ConnectionViewMBean.class);
++        
++        List<ObjectName> subscriptionViewMBeanNameList= new ArrayList<ObjectName>();
++        for(ConnectionViewMBean connectionViewMBean : connectionViewMBeans){
++        	ObjectName[] consumers = connectionViewMBean.getConsumers();
++        	if(consumers != null){
++        		for(ObjectName objectName : consumers){
++        			subscriptionViewMBeanNameList.add(objectName);
++        		}
++        	}
++        }
++        return getManagedObjects(subscriptionViewMBeanNameList.toArray(new ObjectName[subscriptionViewMBeanNameList.size()]),
++        		SubscriptionViewMBean.class);
+     }
++    
++    @SuppressWarnings("unchecked")
++    public Collection<ProducerViewMBean> getProducersOnConnection(String connectionName) throws Exception {
++        connectionName = StringUtils.replace(connectionName, ":", "_");
++        String brokerName = getBrokerName();
++        ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName
++                + ",*,connectionViewType=clientId,connectionName=" + connectionName);
++        
++        Set<ObjectName> queryResult = queryNames(query, null);
++        
++        Collection<ConnectionViewMBean> connectionViewMBeans = getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]),
++        		ConnectionViewMBean.class);
++        
++        List<ObjectName> producerViewMBeanNameList= new ArrayList<ObjectName>();
++        for(ConnectionViewMBean connectionViewMBean : connectionViewMBeans){
++        	ObjectName[] producers = connectionViewMBean.getProducers();
++        	if(producers != null){
++        		for(ObjectName objectName : producers){
++        			producerViewMBeanNameList.add(objectName);
++        		}
++        	}
++        }
++        
++        return getManagedObjects(producerViewMBeanNameList.toArray(new ObjectName[producerViewMBeanNameList.size()]),
++        		ProducerViewMBean.class);
++    }
+ 
+     public JobSchedulerViewMBean getJobScheduler() throws Exception {
+         ObjectName name = getBrokerAdmin().getJMSJobScheduler();

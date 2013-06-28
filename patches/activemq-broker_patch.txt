@@ -1,0 +1,134 @@
+### Eclipse Workspace Patch 1.0
+#P activemq-broker
+Index: src/main/java/org/apache/activemq/broker/TransportConnector.java
+===================================================================
+--- src/main/java/org/apache/activemq/broker/TransportConnector.java	(revision 1457257)
++++ src/main/java/org/apache/activemq/broker/TransportConnector.java	(working copy)
+@@ -22,6 +22,7 @@
+ import java.util.LinkedList;
+ import java.util.StringTokenizer;
+ import java.util.concurrent.CopyOnWriteArrayList;
++import java.util.concurrent.atomic.AtomicInteger;
+ import java.util.regex.Pattern;
+ 
+ import javax.management.ObjectName;
+@@ -77,6 +78,8 @@
+ 
+     LinkedList<String> peerBrokers = new LinkedList<String>();
+ 
++    AtomicInteger state = new AtomicInteger(UNSTART);
++
+     public TransportConnector() {
+     }
+ 
+@@ -251,6 +254,7 @@
+             this.statusDector.start();
+         }
+ 
++        state.set(RUNNING);
+         LOG.info("Connector " + getName() + " Started");
+     }
+ 
+@@ -280,6 +284,8 @@
+         }
+         server = null;
+         ss.throwFirstException();
++
++        state.set(STOPPED);
+         LOG.info("Connector " + getName() + " Stopped");
+     }
+ 
+@@ -617,4 +623,9 @@
+     public void setPublishedAddressPolicy(PublishedAddressPolicy publishedAddressPolicy) {
+         this.publishedAddressPolicy = publishedAddressPolicy;
+     }
++
++    @Override
++    public int getState() {
++        return this.state.get();
++    }
+ }
+Index: src/main/java/org/apache/activemq/broker/jmx/ConnectorView.java
+===================================================================
+--- src/main/java/org/apache/activemq/broker/jmx/ConnectorView.java	(revision 1457257)
++++ src/main/java/org/apache/activemq/broker/jmx/ConnectorView.java	(working copy)
+@@ -83,5 +83,21 @@
+     public int connectionCount() {
+         return connector.connectionCount();
+     }
+-
++    
++    /**
++     * Returns the stateInfo of the connector
++     * @return the stateInfo of the connector
++     */
++    public String getSateInfo(){
++    	switch(connector.getState()){
++    	case Connector.UNSTART:
++    		return "UnStart";
++    	case Connector.RUNNING:
++    		return "Running";
++    	case Connector.STOPPED:
++    		return "Stopped";
++		default:
++			return "Unknown";
++    	}
++    }
+ }
+Index: src/main/java/org/apache/activemq/broker/Connector.java
+===================================================================
+--- src/main/java/org/apache/activemq/broker/Connector.java	(revision 1457257)
++++ src/main/java/org/apache/activemq/broker/Connector.java	(working copy)
+@@ -26,7 +26,10 @@
+  * 
+  */
+ public interface Connector extends Service {
+-
++	public static final int UNSTART = -1;
++	public static final int RUNNING = 1;
++	public static final int STOPPED = 0;
++    
+     /**
+      * @return brokerInfo
+      */
+@@ -60,4 +63,9 @@
+     public boolean  isUpdateClusterClientsOnRemove();
+ 
+     int connectionCount();
++    
++    /**
++     *  @return the state of the connector. Connector.UNSTART or Connector.RUNNING or Connector.STOPPED 
++     */
++    public int getState();
+ }
+Index: src/main/java/org/apache/activemq/broker/jmx/ConnectorViewMBean.java
+===================================================================
+--- src/main/java/org/apache/activemq/broker/jmx/ConnectorViewMBean.java	(revision 1457257)
++++ src/main/java/org/apache/activemq/broker/jmx/ConnectorViewMBean.java	(working copy)
+@@ -48,5 +48,11 @@
+      */  
+     @MBeanInfo("Statistics gathering enabled")
+     boolean isStatisticsEnabled();
+-
++    
++    /**
++     * Returns the stateInfo of the connector
++     * @return the stateInfo of the connector
++     */
++    @MBeanInfo("Get the stateInfo of the connector")
++    public String getSateInfo();
+ }
+Index: .
+===================================================================
+--- .	(revision 1457257)
++++ .	(working copy)
+
+Property changes on: .
+___________________________________________________________________
+Modified: svn:ignore
+## -9,3 +9,5 ##
+ *.i??
+ *.idea
+ derby.log
++bin
++lib

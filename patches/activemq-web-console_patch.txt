@@ -1,0 +1,722 @@
+### Eclipse Workspace Patch 1.0
+#P activemq-web-console
+Index: src/main/java/org/apache/activemq/web/controller/StartConnector.java
+===================================================================
+--- src/main/java/org/apache/activemq/web/controller/StartConnector.java	(revision 0)
++++ src/main/java/org/apache/activemq/web/controller/StartConnector.java	(working copy)
+@@ -0,0 +1,62 @@
++/**
++ * Licensed to the Apache Software Foundation (ASF) under one or more
++ * contributor license agreements.  See the NOTICE file distributed with
++ * this work for additional information regarding copyright ownership.
++ * The ASF licenses this file to You under the Apache License, Version 2.0
++ * (the "License"); you may not use this file except in compliance with
++ * the License.  You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++package org.apache.activemq.web.controller;
++
++import javax.servlet.http.HttpServletRequest;
++import javax.servlet.http.HttpServletResponse;
++
++import org.apache.activemq.broker.jmx.ConnectorViewMBean;
++import org.apache.activemq.web.BrokerFacade;
++import org.slf4j.Logger;
++import org.slf4j.LoggerFactory;
++import org.springframework.web.servlet.ModelAndView;
++import org.springframework.web.servlet.mvc.Controller;
++
++/**
++ * 
++ */
++public class StartConnector implements Controller {
++    private static final Logger LOG = LoggerFactory.getLogger(StartConnector.class);
++    private BrokerFacade brokerFacade;
++    
++    String connectorName;
++    
++    public String getConnectorName() {
++		return connectorName;
++	}
++
++	public void setConnectorName(String connectorName) {
++		this.connectorName = connectorName;
++	}
++
++	public StartConnector(BrokerFacade brokerFacade) {
++        this.brokerFacade = brokerFacade;
++    }
++
++    public ModelAndView handleRequest(HttpServletRequest request, HttpServletResponse response) throws Exception {
++        if (connectorName != null) {
++            ConnectorViewMBean connector = brokerFacade.getConnector(connectorName);
++            if (connector != null) {
++                connector.start();
++                LOG.info("Start connector " + connectorName);
++            } else {
++            	LOG.warn("Start connector fail, connectorName:" + connectorName + " == null!");
++            }
++        }
++        return new ModelAndView("connectors.jsp");
++    }
++}
+Index: src/main/java/org/apache/activemq/web/controller/StartConnector.java
+===================================================================
+--- src/main/java/org/apache/activemq/web/controller/StartConnector.java	(revision 0)
++++ src/main/java/org/apache/activemq/web/controller/StartConnector.java	(working copy)
+
+Property changes on: src/main/java/org/apache/activemq/web/controller/StartConnector.java
+___________________________________________________________________
+Added: svn:executable
+## -0,0 +1 ##
++*
+\ No newline at end of property
+Index: src/main/webapp/topicProducers.jsp
+===================================================================
+--- src/main/webapp/topicProducers.jsp	(revision 0)
++++ src/main/webapp/topicProducers.jsp	(working copy)
+@@ -0,0 +1,71 @@
++<%--
++    Licensed to the Apache Software Foundation (ASF) under one or more
++    contributor license agreements.  See the NOTICE file distributed with
++    this work for additional information regarding copyright ownership.
++    The ASF licenses this file to You under the Apache License, Version 2.0
++    (the "License"); you may not use this file except in compliance with
++    the License.  You may obtain a copy of the License at
++   
++    http://www.apache.org/licenses/LICENSE-2.0
++   
++    Unless required by applicable law or agreed to in writing, software
++    distributed under the License is distributed on an "AS IS" BASIS,
++    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++    See the License for the specific language governing permissions and
++    limitations under the License.
++--%>
++<html>
++<head>
++<title>Producers for <c:out value="${requestContext.topicProducerQuery.JMSDestination}" /></title>
++</head>
++<body>
++
++<h2>Active Producers for <c:out value="${requestContext.topicProducerQuery.JMSDestination}" /></h2>
++
++<table id="messages" class="sortable autostripe">
++<thead>
++<tr>
++	<th>
++		<span>Client ID</span>
++		<br/>
++		<span>Connection ID</span>
++	</th>
++	<th>ClientId</th>
++	<th>ConnectionId</th>
++	<th>SessionId</th>
++	<th>ProducerId</th>
++	<th>DestinationName</th>
++	<th>isDestinationQueue</th>
++	<th>isDestinationTemporary</th>
++	<th>ProducerWindowSize</th>
++	<th>DispatchAsync</th>
++	<th>UserName</th>
++</tr>
++</thead>
++<tbody>
++<c:forEach items="${requestContext.topicProducerQuery.producers}" var="row">
++<tr>
++	<td>
++        <a href="connection.jsp?connectionID=${row.clientId}">${row.clientId}</a><br/>
++        ${row.connectionId}</a>
++    </td>
++	<td><c:out value="${row.clientId}" /></td>
++	<td><c:out value="${row.connectionId}" /></td>
++	<td><c:out value="${row.sessionId}" /></td>
++	<td><c:out value="${row.producerId}" /></td>
++	<td><c:out value="${row.destinationName}" /></td>
++	<td>
++		<c:out value="${row.destinationQueue}" /><br/>
++	</td>
++	<td><c:out value="${row.destinationTemporary}" /></td>
++	<td><c:out value="${row.producerWindowSize}" /></td>
++	<td><c:out value="${row.dispatchAsync}" /></td>
++	<td><c:out value="${row.userName}" /></td>
++</tr>
++</c:forEach>
++</tbody>
++</table>
++
++</body>
++</html>
++	
+\ No newline at end of file
+Index: src/main/webapp/topicProducers.jsp
+===================================================================
+--- src/main/webapp/topicProducers.jsp	(revision 0)
++++ src/main/webapp/topicProducers.jsp	(working copy)
+
+Property changes on: src/main/webapp/topicProducers.jsp
+___________________________________________________________________
+Added: svn:executable
+## -0,0 +1 ##
++*
+\ No newline at end of property
+Index: src/main/webapp/topics.jsp
+===================================================================
+--- src/main/webapp/topics.jsp	(revision 1457257)
++++ src/main/webapp/topics.jsp	(working copy)
+@@ -39,8 +39,10 @@
+ <tr>
+ <th>Name</th>
+ <th>Number Of Consumers</th>
++<th>Number Of Producers</th>
+ <th>Messages Enqueued</th>
+ <th>Messages Dequeued</th>
++<th>Views</th>
+ <th>Operations</th>
+ </tr>
+ </thead>
+@@ -51,9 +53,16 @@
+                         <c:param name="JMSDestination" value="${row.name}" />
+                         <c:param name="JMSDestinationType" value="topic"/></c:url>"><form:tooltip text="${row.name}" length="50"/></a></td>
+ <td>${row.consumerCount}</td>
++<td>${row.producerCount}</td>
+ <td>${row.enqueueCount}</td>
+ <td>${row.dequeueCount}</td>
+ <td>
++	<a href="<c:url value="topicConsumers.jsp">
++	                <c:param name="JMSDestination" value="${row.name}" /></c:url>">Active Consumers</a><br/>
++	<a href="<c:url value="topicProducers.jsp">
++	                <c:param name="JMSDestination" value="${row.name}" /></c:url>">Active Producers</a><br/>
++</td>
++<td>
+     <a href="<c:url value="send.jsp">
+                         <c:param name="JMSDestination" value="${row.name}" />
+                         <c:param name="JMSDestinationType" value="topic"/></c:url>">Send To</a>
+Index: src/main/java/org/apache/activemq/web/controller/StopConnector.java
+===================================================================
+--- src/main/java/org/apache/activemq/web/controller/StopConnector.java	(revision 0)
++++ src/main/java/org/apache/activemq/web/controller/StopConnector.java	(working copy)
+@@ -0,0 +1,62 @@
++/**
++ * Licensed to the Apache Software Foundation (ASF) under one or more
++ * contributor license agreements.  See the NOTICE file distributed with
++ * this work for additional information regarding copyright ownership.
++ * The ASF licenses this file to You under the Apache License, Version 2.0
++ * (the "License"); you may not use this file except in compliance with
++ * the License.  You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++package org.apache.activemq.web.controller;
++
++import javax.servlet.http.HttpServletRequest;
++import javax.servlet.http.HttpServletResponse;
++
++import org.apache.activemq.broker.jmx.ConnectorViewMBean;
++import org.apache.activemq.web.BrokerFacade;
++import org.slf4j.Logger;
++import org.slf4j.LoggerFactory;
++import org.springframework.web.servlet.ModelAndView;
++import org.springframework.web.servlet.mvc.Controller;
++
++/**
++ * 
++ */
++public class StopConnector implements Controller {
++    private static final Logger LOG = LoggerFactory.getLogger(StopConnector.class);
++    private BrokerFacade brokerFacade;
++    
++    String connectorName;
++    
++    public String getConnectorName() {
++		return connectorName;
++	}
++
++	public void setConnectorName(String connectorName) {
++		this.connectorName = connectorName;
++	}
++
++	public StopConnector(BrokerFacade brokerFacade) {
++		this.brokerFacade = brokerFacade;
++    }
++
++    public ModelAndView handleRequest(HttpServletRequest request, HttpServletResponse response) throws Exception {
++        if (connectorName != null) {
++            ConnectorViewMBean connector = brokerFacade.getConnector(connectorName);
++            if (connector != null) {
++                connector.stop();
++                LOG.info("Stop connector " + connectorName);
++            } else {
++            	LOG.warn("Stop connector fail, connectorName:" + connectorName + " == null!");
++            }
++        }
++        return new ModelAndView("connectors.jsp");
++    }
++}
+Index: src/main/java/org/apache/activemq/web/controller/StopConnector.java
+===================================================================
+--- src/main/java/org/apache/activemq/web/controller/StopConnector.java	(revision 0)
++++ src/main/java/org/apache/activemq/web/controller/StopConnector.java	(working copy)
+
+Property changes on: src/main/java/org/apache/activemq/web/controller/StopConnector.java
+___________________________________________________________________
+Added: svn:executable
+## -0,0 +1 ##
++*
+\ No newline at end of property
+Index: src/main/webapp/queues.jsp
+===================================================================
+--- src/main/webapp/queues.jsp	(revision 1457257)
++++ src/main/webapp/queues.jsp	(working copy)
+@@ -41,6 +41,7 @@
+ <th>Name</th>
+ <th>Number Of Pending Messages</th>
+ <th>Number Of Consumers</th>
++<th>Number Of Producers</th>
+ <th>Messages Enqueued</th>
+ <th>Messages Dequeued</th>
+ <th>Views</th>
+@@ -55,13 +56,16 @@
+                         <c:param name="JMSDestination" value="${row.name}" /></c:url>"><form:tooltip text="${row.name}" length="50"/></a></td>
+ <td>${row.queueSize}</td>
+ <td>${row.consumerCount}</td>
++<td>${row.producerCount}</td>
+ <td>${row.enqueueCount}</td>
+ <td>${row.dequeueCount}</td>
+ <td>
+     <a href="<c:url value="browse.jsp">
+-                   <c:param name="JMSDestination" value="${row.name}" /></c:url>">Browse</a>
++                   <c:param name="JMSDestination" value="${row.name}" /></c:url>">Browse Messages</a><br/>
+ 	<a href="<c:url value="queueConsumers.jsp">
+ 	                <c:param name="JMSDestination" value="${row.name}" /></c:url>">Active Consumers</a><br/>
++	<a href="<c:url value="queueProducers.jsp">
++	                <c:param name="JMSDestination" value="${row.name}" /></c:url>">Active Producers</a><br/>	                
+     <a href="queueBrowse/<form:escape text="${row.name}" />?view=rss&feedType=atom_1.0" title="Atom 1.0"><img src="images/feed_atom.png"/></a>
+     <a href="queueBrowse/<form:escape text="${row.name}" />?view=rss&feedType=rss_2.0" title="RSS 2.0"><img src="images/feed_rss.png"/></a>
+ </td>
+Index: src/main/webapp/queueProducers.jsp
+===================================================================
+--- src/main/webapp/queueProducers.jsp	(revision 0)
++++ src/main/webapp/queueProducers.jsp	(working copy)
+@@ -0,0 +1,71 @@
++<%--
++    Licensed to the Apache Software Foundation (ASF) under one or more
++    contributor license agreements.  See the NOTICE file distributed with
++    this work for additional information regarding copyright ownership.
++    The ASF licenses this file to You under the Apache License, Version 2.0
++    (the "License"); you may not use this file except in compliance with
++    the License.  You may obtain a copy of the License at
++   
++    http://www.apache.org/licenses/LICENSE-2.0
++   
++    Unless required by applicable law or agreed to in writing, software
++    distributed under the License is distributed on an "AS IS" BASIS,
++    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++    See the License for the specific language governing permissions and
++    limitations under the License.
++--%>
++<html>
++<head>
++<title>Producers for <c:out value="${requestContext.queueProducerQuery.JMSDestination}" /></title>
++</head>
++<body>
++
++<h2>Active Producers for <c:out value="${requestContext.queueProducerQuery.JMSDestination}" /></h2>
++
++<table id="messages" class="sortable autostripe">
++<thead>
++<tr>
++	<th>
++		<span>Client ID</span>
++		<br/>
++		<span>Connection ID</span>
++	</th>
++	<th>ClientId</th>
++	<th>ConnectionId</th>
++	<th>SessionId</th>
++	<th>ProducerId</th>
++	<th>DestinationName</th>
++	<th>isDestinationQueue</th>
++	<th>isDestinationTemporary</th>
++	<th>ProducerWindowSize</th>
++	<th>DispatchAsync</th>
++	<th>UserName</th>
++</tr>
++</thead>
++<tbody>
++<c:forEach items="${requestContext.queueProducerQuery.producers}" var="row">
++<tr>
++	<td>
++        <a href="connection.jsp?connectionID=${row.clientId}">${row.clientId}</a><br/>
++        ${row.connectionId}</a>
++    </td>
++	<td><c:out value="${row.clientId}" /></td>
++	<td><c:out value="${row.connectionId}" /></td>
++	<td><c:out value="${row.sessionId}" /></td>
++	<td><c:out value="${row.producerId}" /></td>
++	<td><c:out value="${row.destinationName}" /></td>
++	<td>
++		<c:out value="${row.destinationQueue}" /><br/>
++	</td>
++	<td><c:out value="${row.destinationTemporary}" /></td>
++	<td><c:out value="${row.producerWindowSize}" /></td>
++	<td><c:out value="${row.dispatchAsync}" /></td>
++	<td><c:out value="${row.userName}" /></td>
++</tr>
++</c:forEach>
++</tbody>
++</table>
++
++</body>
++</html>
++	
+\ No newline at end of file
+Index: src/main/webapp/queueProducers.jsp
+===================================================================
+--- src/main/webapp/queueProducers.jsp	(revision 0)
++++ src/main/webapp/queueProducers.jsp	(working copy)
+
+Property changes on: src/main/webapp/queueProducers.jsp
+___________________________________________________________________
+Added: svn:executable
+## -0,0 +1 ##
++*
+\ No newline at end of property
+Index: src/main/webapp/WEB-INF/webconsole-query.xml
+===================================================================
+--- src/main/webapp/WEB-INF/webconsole-query.xml	(revision 1457257)
++++ src/main/webapp/WEB-INF/webconsole-query.xml	(working copy)
+@@ -21,5 +21,8 @@
+   <bean id="queueBrowser" class="org.apache.activemq.web.QueueBrowseQuery" autowire="constructor" destroy-method="destroy" scope="request"/>
+   <bean id="messageQuery" class="org.apache.activemq.web.MessageQuery" autowire="constructor" destroy-method="destroy" scope="request"/>
+   <bean id="queueConsumerQuery" class="org.apache.activemq.web.QueueConsumerQuery" autowire="constructor" destroy-method="destroy" scope="request"/>
++  <bean id="queueProducerQuery" class="org.apache.activemq.web.QueueProducerQuery" autowire="constructor" destroy-method="destroy" scope="request"/>
++  <bean id="topicConsumerQuery" class="org.apache.activemq.web.TopicConsumerQuery" autowire="constructor" destroy-method="destroy" scope="request"/>
++  <bean id="topicProducerQuery" class="org.apache.activemq.web.TopicProducerQuery" autowire="constructor" destroy-method="destroy" scope="request"/>
+   <bean id="connectionQuery" class="org.apache.activemq.web.ConnectionQuery" autowire="constructor" destroy-method="destroy" scope="request"/>
+ </beans>
+Index: src/main/webapp/connectors.jsp
+===================================================================
+--- src/main/webapp/connectors.jsp	(revision 0)
++++ src/main/webapp/connectors.jsp	(working copy)
+@@ -0,0 +1,89 @@
++<%--
++    Licensed to the Apache Software Foundation (ASF) under one or more
++    contributor license agreements.  See the NOTICE file distributed with
++    this work for additional information regarding copyright ownership.
++    The ASF licenses this file to You under the Apache License, Version 2.0
++    (the "License"); you may not use this file except in compliance with
++    the License.  You may obtain a copy of the License at
++   
++    http://www.apache.org/licenses/LICENSE-2.0
++   
++    Unless required by applicable law or agreed to in writing, software
++    distributed under the License is distributed on an "AS IS" BASIS,
++    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++    See the License for the specific language governing permissions and
++    limitations under the License.
++--%>
++<html>
++<head>
++<title>Connectors</title>
++</head>
++
++<%@page import="org.apache.activemq.broker.jmx.ConnectorViewMBean" %>
++<%@page import="org.apache.activemq.web.BrokerFacade" %>
++
++
++
++<body>
++
++	<h2>Connectors</h2>
++
++<c:set var="brokerFacade" value="${requestContext.brokerQuery}"/>
++
++<%
++BrokerFacade brokerFacade = (BrokerFacade)pageContext.getAttribute("brokerFacade");
++%>
++
++
++	<c:forEach items="${requestContext.brokerQuery.connectors}"
++		var="connectorName">
++<%-- 		<h3>Connector ${connectorName}</h3> --%>
++
++		<table id="connectors" class="sortable autostripe">
++			<thead>
++				<tr>
++					<th>Name</th>
++					<th>StatisticsEnabled</th>
++					<th>Connection Count</th>
++					<th>Operations</th>
++					<th>State Info</th>
++				</tr>
++			</thead>
++			
++			<%
++				String connectorName = (String)pageContext.getAttribute("connectorName");
++				ConnectorViewMBean connector = brokerFacade.getConnector(connectorName);
++				pageContext.setAttribute("connector", connector);
++				int connectionCount = connector.connectionCount();
++				pageContext.setAttribute("connectionCount", connectionCount);
++				//getSateInfo
++			%>
++
++				<tr>
++					<td>${connectorName}</td>
++					<td>${connector.statisticsEnabled}</td>
++					<td>${connectionCount}</td>
++					<td>
++					<a href="<c:url value="startConnector.action">
++						<c:param name="connectorName" value="${connectorName}" />
++						<c:param name="secret" value='${sessionScope["secret"]}'/>
++						</c:url>">Start</a>
++					
++					<br>
++					<a href="<c:url value="stopConnector.action">
++						<c:param name="connectorName" value="${connectorName}" />
++						<c:param name="secret" value='${sessionScope["secret"]}'/>
++						</c:url>">Stop</a>
++
++					</td>
++					<td>${connector.sateInfo}</td>
++				</tr>
++
++			</tbody>
++		</table>
++
++	</c:forEach>
++
++</body>
++</html>
++
+Index: src/main/webapp/connectors.jsp
+===================================================================
+--- src/main/webapp/connectors.jsp	(revision 0)
++++ src/main/webapp/connectors.jsp	(working copy)
+
+Property changes on: src/main/webapp/connectors.jsp
+___________________________________________________________________
+Added: svn:executable
+## -0,0 +1 ##
++*
+\ No newline at end of property
+Index: src/main/webapp/connection.jsp
+===================================================================
+--- src/main/webapp/connection.jsp	(revision 1457257)
++++ src/main/webapp/connection.jsp	(working copy)
+@@ -129,7 +129,59 @@
+ </tbody>
+ </table>
+ 
++<h3>Producers</h3>
+ 
++<table id="messages" class="sortable autostripe">
++<thead>
++<tr>
++	<th>Destination</th>
++	<th>ClientId</th>
++	<th>ConnectionId</th>
++	<th>SessionId</th>
++	<th>ProducerId</th>
++	<th>DestinationName</th>
++	<th>isDestinationQueue</th>
++	<th>isDestinationTemporary</th>
++	<th>ProducerWindowSize</th>
++	<th>DispatchAsync</th>
++	<th>UserName</th>
++</tr>
++</thead>
++
++<tbody>
++<c:forEach items="${requestContext.connectionQuery.producers}" var="producer">
++<tr>
++	<td>
++		<c:choose>
++			<c:when test="${producer.destinationQueue}">
++				Queue <a href="browse.jsp?JMSDestination=${producer.destinationName}"><c:out value="${producer.destinationName}" /></a>
++			</c:when>
++			<c:when test="${consumer.destinationTopic}">
++				Topic <a href="send.jsp?JMSDestination=${producer.destinationName}"><c:out value="${producer.destinationName}" /></a>
++			</c:when>
++			<c:otherwise>
++				<c:out value="${producer.destinationName}" />
++			</c:otherwise>
++		</c:choose>
++	</td>
++	<td><c:out value="${producer.clientId}" /></td>
++	<td><c:out value="${producer.connectionId}" /></td>
++	<td><c:out value="${producer.sessionId}" /></td>
++	<td><c:out value="${producer.producerId}" /></td>
++	<td><c:out value="${producer.destinationName}" /></td>
++	<td>
++		<c:out value="${producer.destinationQueue}" /><br/>
++	</td>
++	<td><c:out value="${producer.destinationTemporary}" /></td>
++	<td><c:out value="${producer.producerWindowSize}" /></td>
++	<td><c:out value="${producer.dispatchAsync}" /></td>
++	<td><c:out value="${producer.userName}" /></td>
++</tr>
++</c:forEach>
++</tbody>
++
++</table>
++
+ </c:otherwise>
+ </c:choose>
+ 
+Index: src/main/resources/log4j.properties
+===================================================================
+--- src/main/resources/log4j.properties	(revision 1457257)
++++ src/main/resources/log4j.properties	(working copy)
+@@ -28,7 +28,8 @@
+ # CONSOLE appender not used by default
+ log4j.appender.stdout=org.apache.log4j.ConsoleAppender
+ log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
+-log4j.appender.stdout.layout.ConversionPattern=%d [%-15.15t] %-5p %-30.30c{1} - %m%n
++#log4j.appender.stdout.layout.ConversionPattern=%d [%-15.15t] %-5p %-30.30c{1} - %m%n
++log4j.appender.stdout.layout.ConversionPattern=%d [%-15.15t] %-5p %-30.30c %l - %m%n
+ 
+ # File appender
+ log4j.appender.out=org.apache.log4j.FileAppender
+Index: src/main/webapp/WEB-INF/dispatcher-servlet.xml
+===================================================================
+--- src/main/webapp/WEB-INF/dispatcher-servlet.xml	(revision 1457257)
++++ src/main/webapp/WEB-INF/dispatcher-servlet.xml	(working copy)
+@@ -36,6 +36,9 @@
+   <bean name="/copyMessage.action" class="org.apache.activemq.web.controller.CopyMessage" autowire="constructor"  singleton="false"/>	
+   <bean name="/moveMessage.action" class="org.apache.activemq.web.controller.MoveMessage" autowire="constructor"  singleton="false"/>
+   <bean name="/deleteJob.action" class="org.apache.activemq.web.controller.DeleteJob" autowire="constructor"  singleton="false"/>
++  <bean name="/startConnector.action" class="org.apache.activemq.web.controller.StartConnector" autowire="constructor"  singleton="false"/>
++  <bean name="/stopConnector.action" class="org.apache.activemq.web.controller.StopConnector" autowire="constructor"  singleton="false"/>
++  
+ 
+   <!--
+     - This bean resolves specific types of exception to corresponding error views.
+Index: src/main/webapp/topicConsumers.jsp
+===================================================================
+--- src/main/webapp/topicConsumers.jsp	(revision 0)
++++ src/main/webapp/topicConsumers.jsp	(working copy)
+@@ -0,0 +1,86 @@
++<%--
++    Licensed to the Apache Software Foundation (ASF) under one or more
++    contributor license agreements.  See the NOTICE file distributed with
++    this work for additional information regarding copyright ownership.
++    The ASF licenses this file to You under the Apache License, Version 2.0
++    (the "License"); you may not use this file except in compliance with
++    the License.  You may obtain a copy of the License at
++   
++    http://www.apache.org/licenses/LICENSE-2.0
++   
++    Unless required by applicable law or agreed to in writing, software
++    distributed under the License is distributed on an "AS IS" BASIS,
++    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++    See the License for the specific language governing permissions and
++    limitations under the License.
++--%>
++<html>
++<head>
++<title>Consumers for <c:out value="${requestContext.topicConsumerQuery.JMSDestination}" /></title>
++</head>
++<body>
++
++<h2>Active Consumers for <c:out value="${requestContext.topicConsumerQuery.JMSDestination}" /></h2>
++
++<table id="messages" class="sortable autostripe">
++<thead>
++<tr>
++	<th>
++		<span>Client ID</span>
++		<br/>
++		<span>Connection ID</span>
++	</th>
++	<th>SessionId</th>
++	<th>Selector</th>
++	<th>Enqueues</th>
++	<th>Dequeues</th>
++	<th>Dispatched</th>
++	<th>Dispatched Queue</th>
++	<th>
++		<span>Prefetch</span>
++		<br/>
++		<span>Max pending</span>
++	</th>
++	<th>
++		<span>Exclusive</span>
++		<br/>
++		<span>Retroactive</span>
++	</th>
++</tr>
++</thead>
++<tbody>
++<c:forEach items="${requestContext.topicConsumerQuery.consumers}" var="row">
++<tr>
++	<td>
++        <c:choose>
++            <c:when test="${row.network}">
++                <a href="network.jsp">${row.clientId}</a><br/>
++            </c:when>
++            <c:otherwise>
++                <a href="connection.jsp?connectionID=${row.clientId}">${row.clientId}</a><br/>
++            </c:otherwise>
++        </c:choose>
++            ${row.connectionId}</a>
++    </td>
++	<td>${row.sessionId}</td>
++	<td>${row.selector}</td>
++	<td>${row.enqueueCounter}</td>
++	<td>${row.dequeueCounter}</td>
++	<td>${row.dispatchedCounter}</td>
++	<td>${row.dispatchedQueueSize}</td>
++	<td>
++		${row.prefetchSize}<br/>
++		${row.maximumPendingMessageLimit}
++	</td>
++	<td>
++		${row.exclusive}<br/>
++		${row.retroactive}
++	</td>
++</tr>
++</c:forEach>
++</tbody>
++</table>
++
++</body>
++</html>
++	
+\ No newline at end of file
+Index: src/main/webapp/topicConsumers.jsp
+===================================================================
+--- src/main/webapp/topicConsumers.jsp	(revision 0)
++++ src/main/webapp/topicConsumers.jsp	(working copy)
+
+Property changes on: src/main/webapp/topicConsumers.jsp
+___________________________________________________________________
+Added: svn:executable
+## -0,0 +1 ##
++*
+\ No newline at end of property
+Index: src/main/webapp/decorators/main.jsp
+===================================================================
+--- src/main/webapp/decorators/main.jsp	(revision 1457257)
++++ src/main/webapp/decorators/main.jsp	(working copy)
+@@ -78,6 +78,8 @@
+                             &#124;
+                             <a href="<c:url value='/network.jsp'/>" title="Network">Network</a>
+                             &#124;
++                            <a href="<c:url value='/connectors.jsp'/>" title="Connectors">Connectors</a>
++                            &#124;
+                              <a href="<c:url value='/scheduled.jsp'/>" title="Scheduled">Scheduled</a>
+                             &#124;
+                             <a href="<c:url value='/send.jsp'/>"
