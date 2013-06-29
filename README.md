@@ -1,4 +1,3 @@
-
 ## ActiveMQ-WebConsole修复增强版
 这个修复增强版基于ActiveMQ5.8.0：http://activemq.apache.org/activemq-580-release.html 。
  
@@ -15,8 +14,8 @@
 
 个人认为手动启动/停止 connector，这个功能很实用。
  
-可以在broker中配置两个connector，即两个端口inputPort和outPort，生产者连接inputPort，消息者连接outPort。
-那么，当想要停止ActiveMQ时，可以先把inputPort的connector停止掉，等确认消息已经全部被消息了，再停止outPort的connector。
+可以在broker中配置两个connector，即两个端口inputPort和outputPort，生产者连接inputPort，消息者连接outputPort。
+那么，当想要停止ActiveMQ时，可以先把inputPort的connector停止掉，等确认消息已经全部被消息了，再停止outputPort的connector。
 这样可以很方便地实现关流量的效果，而不用在应用层关流量。修改ActiveMQ的配置或者升级ActiveMQ都会非常方便。
 
 ### 下载
